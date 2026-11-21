@@ -17,6 +17,7 @@ import { onyxSemanticManifest } from "../templates/onyx/semantic";
 import { pikachuSemanticManifest } from "../templates/pikachu/semantic";
 import { rhyhornSemanticManifest } from "../templates/rhyhorn/semantic";
 import { scizorSemanticManifest } from "../templates/scizor/semantic";
+import { baseManifest, itemHeaderRowPart } from "./shared-parts";
 import { SHARED_BINDING_REGISTRY } from "./binding-inventory";
 
 export type TemplateSemanticPlacement = "main" | "sidebar";
@@ -147,6 +148,20 @@ const TEMPLATE_SEMANTIC_MANIFESTS = {
 	pikachu: pikachuSemanticManifest,
 	rhyhorn: rhyhornSemanticManifest,
 	scizor: scizorSemanticManifest,
+	aurora: baseManifest("aurora", [itemHeaderRowPart]),
+	coral: baseManifest("coral", [itemHeaderRowPart]),
+	lienzo: baseManifest("lienzo", [itemHeaderRowPart]),
+	nocturno: baseManifest("nocturno", [itemHeaderRowPart]),
+	mosaico: baseManifest("mosaico", [itemHeaderRowPart]),
+	prisma: baseManifest("prisma", [itemHeaderRowPart]),
+	brisa: baseManifest("brisa", [itemHeaderRowPart]),
+	vertice: baseManifest("vertice", [itemHeaderRowPart]),
+	oasis: baseManifest("oasis", [itemHeaderRowPart]),
+	zafiro: baseManifest("zafiro", [itemHeaderRowPart]),
+	tinta: baseManifest("tinta", [itemHeaderRowPart]),
+	pixel: baseManifest("pixel", [itemHeaderRowPart]),
+	cometa: baseManifest("cometa", [itemHeaderRowPart]),
+	trazo: baseManifest("trazo", [itemHeaderRowPart]),
 } as const satisfies Readonly<Record<Template, TemplateSemanticManifest>>;
 
 export function getTemplateSemanticManifest(template: Template): TemplateSemanticManifest {

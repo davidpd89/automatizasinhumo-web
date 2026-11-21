@@ -1,0 +1,181 @@
+/*
+ * Tarjeta digital (/c/<slug> y el configurador del estudio de CV): una sola maqueta y seis modelos que
+ * solo cambian variables. Los colores del cliente llegan en --acento, --acento2 (segundo tono del
+ * degradado) y --sobre (texto legible sobre el acento), calculados en modelosTarjeta.ts.
+ */
+.tj {
+  --t-fondo: #fff;
+  --t-texto: #111827;
+  --t-suave: #374151;
+  --t-tenue: #6b7280;
+  --t-borde: #e5e7eb;
+  --t-cab-fondo: var(--acento);
+  --t-cab-texto: var(--sobre);
+  --t-cab-borde: transparent;
+  --t-alinea: center;
+  --t-ini-fondo: rgb(255 255 255 / 0.2);
+  --t-ini-texto: currentColor;
+  --t-ini-borde: currentColor;
+  --t-btn-fondo: transparent;
+  --t-btn-texto: var(--t-texto);
+  --t-btn-borde: var(--t-borde);
+  --t-guardar-fondo: var(--acento);
+  --t-guardar-texto: var(--sobre);
+  --t-guardar-borde: var(--acento);
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--t-fondo);
+  color: var(--t-texto);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.08);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  text-align: var(--t-alinea);
+}
+.tj[data-modelo='degradado'] {
+  --t-cab-fondo: linear-gradient(135deg, var(--acento), var(--acento2));
+}
+.tj[data-modelo='bloque'] {
+  --t-fondo: var(--acento);
+  --t-texto: var(--sobre);
+  --t-suave: var(--sobre);
+  --t-tenue: color-mix(in srgb, var(--sobre) 78%, transparent);
+  --t-cab-fondo: transparent;
+  --t-cab-texto: var(--sobre);
+  --t-btn-fondo: color-mix(in srgb, var(--sobre) 14%, transparent);
+  --t-btn-texto: var(--sobre);
+  --t-btn-borde: color-mix(in srgb, var(--sobre) 40%, transparent);
+  --t-guardar-fondo: var(--sobre);
+  --t-guardar-texto: var(--acento);
+  --t-guardar-borde: var(--sobre);
+}
+.tj[data-modelo='oscura'] {
+  --t-fondo: #0f172a;
+  --t-texto: #f8fafc;
+  --t-suave: #cbd5e1;
+  --t-tenue: #94a3b8;
+  --t-cab-fondo: transparent;
+  --t-cab-texto: #f8fafc;
+  --t-ini-fondo: var(--acento);
+  --t-ini-texto: var(--sobre);
+  --t-ini-borde: color-mix(in srgb, var(--acento), #fff 35%);
+  --t-btn-fondo: #1e293b;
+  --t-btn-texto: #f1f5f9;
+  --t-btn-borde: #334155;
+  --t-guardar-borde: color-mix(in srgb, var(--acento), #fff 35%);
+}
+.tj[data-modelo='tinte'] {
+  --t-cab-fondo: color-mix(in srgb, var(--acento) 14%, #fff);
+  --t-cab-texto: #111827;
+  --t-ini-fondo: var(--acento);
+  --t-ini-texto: var(--sobre);
+  --t-ini-borde: transparent;
+  --t-btn-borde: color-mix(in srgb, var(--acento) 35%, #fff);
+}
+.tj[data-modelo='minimal'] {
+  --t-cab-fondo: transparent;
+  --t-cab-texto: #111827;
+  --t-cab-borde: var(--acento);
+  --t-alinea: left;
+  --t-ini-fondo: color-mix(in srgb, var(--acento) 12%, #fff);
+  --t-ini-texto: #111827;
+  --t-ini-borde: transparent;
+  box-shadow: 0 0 0 1px var(--t-borde);
+}
+.tj-cab {
+  padding: 32px 24px 24px;
+  background: var(--t-cab-fondo);
+  color: var(--t-cab-texto);
+  border-bottom: 3px solid var(--t-cab-borde);
+}
+.tj-ini {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+  border: 2px solid var(--t-ini-borde);
+  border-radius: 50%;
+  background: var(--t-ini-fondo);
+  color: var(--t-ini-texto);
+  font-size: 28px;
+  font-weight: 700;
+}
+.tj[data-modelo='minimal'] .tj-ini {
+  margin-inline: 0;
+}
+.tj-nombre {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.tj-cargo {
+  margin: 6px 0 0;
+  opacity: 0.92;
+  overflow-wrap: anywhere;
+}
+.tj-cuerpo {
+  display: grid;
+  gap: 12px;
+  padding: 20px 24px 24px;
+}
+.tj-resumen {
+  margin: 0;
+  color: var(--t-suave);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.tj-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--t-btn-borde);
+  border-radius: 12px;
+  background: var(--t-btn-fondo);
+  color: var(--t-btn-texto);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+a.tj-btn:hover,
+a.tj-btn:focus-visible {
+  border-color: var(--acento);
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
+}
+.tj-btn span {
+  color: var(--t-tenue);
+  font-weight: 400;
+  font-size: 0.9em;
+}
+.tj-btn.tj-guardar {
+  justify-content: center;
+  border-color: var(--t-guardar-borde);
+  background: var(--t-guardar-fondo);
+  color: var(--t-guardar-texto);
+  font-weight: 600;
+  text-align: center;
+}
+.tj-qr {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--t-tenue);
+  font-size: 0.85rem;
+}
+.tj-qr svg {
+  width: 168px;
+  height: 168px;
+  padding: 6px;
+  border-radius: 10px;
+  background: #fff;
+}
+.tj [hidden] {
+  display: none;
+}

@@ -49,7 +49,7 @@ export const FAMILIAS: readonly FamiliaCatalogo[] = [
         nombre: 'Currículum con buen diseño',
         texto: 'Eliges un diseño, escribes tus datos y lo ves al momento. Lo descargas en PDF.',
         icono: 'file-text',
-        puntos: ['15 diseños listos o uno a tu gusto', 'Vista previa mientras escribes', 'PDF listo para enviar'],
+        puntos: ['29 diseños, 14 creativos, o uno a tu gusto', 'Vista previa mientras escribes', 'PDF listo para enviar'],
         href: '/servicios/cv',
         desde: desdeCv,
         imagen: miniaturaCv('onyx'),

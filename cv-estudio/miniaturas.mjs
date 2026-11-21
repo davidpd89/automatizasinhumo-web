@@ -14,7 +14,7 @@ const salida = path.join(publico, 'cv/estudio/miniaturas');
 const ANCHO = 480; // 2x del ancho de la tarjeta en la galería
 
 // Muestra de la plantilla personalizable: una base con formas, sombreado y color propio.
-const PERSONALIZABLE = { plantilla: 'onyx', color: '#b34a28', decoracion: { forma: 'circulos', color: '#b34a28', intensidad: 0.8, sombreado: true } };
+const PERSONALIZABLE = { plantilla: 'onyx', color: '#b34a28', decoracion: { forma: 'burbujas', color: '#b34a28', color2: '#e0a526', intensidad: 0.8, posicion: 'ambas', sombreado: 'cabecera', fondo: 'papel' } };
 
 const tipos = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.woff': 'font/woff', '.woff2': 'font/woff2' };
 const srv = createServer((req, res) => {

@@ -14,6 +14,7 @@ import {
   texto,
   urlSegura,
 } from './paginas';
+import { LIMITES_TARJETA, MODELO_TARJETA_POR_DEFECTO, esModeloTarjeta, type ModeloTarjeta } from './modelosTarjeta';
 
 export { urlSegura };
 
@@ -32,6 +33,10 @@ export interface DatosTarjeta {
   enlaces: EnlaceTarjeta[];
   /** Color de acento #rrggbb (el del diseño elegido en el estudio). */
   color: string;
+  /** Aspecto de la tarjeta (modelosTarjeta.ts). */
+  modelo: ModeloTarjeta;
+  /** Si la tarjeta muestra el QR para compartirla. */
+  qr: boolean;
 }
 
 export const COLOR_POR_DEFECTO = '#2563eb';
@@ -42,7 +47,7 @@ export type ResultadoTarjeta = { ok: true; datos: DatosTarjeta } | { ok: false; 
 export function validarTarjeta(x: unknown): ResultadoTarjeta {
   if (!x || typeof x !== 'object') return { ok: false, error: 'datos' };
   const o = x as Record<string, unknown>;
-  const nombre = texto(o.nombre, 80);
+  const nombre = texto(o.nombre, LIMITES_TARJETA.nombre);
   if (!nombre) return { ok: false, error: 'nombre' };
   const email = texto(o.email, 254);
   if (email && !EMAIL.test(email)) return { ok: false, error: 'email' };
@@ -63,14 +68,16 @@ export function validarTarjeta(x: unknown): ResultadoTarjeta {
     ok: true,
     datos: {
       nombre,
-      cargo: texto(o.cargo, 100),
+      cargo: texto(o.cargo, LIMITES_TARJETA.cargo),
       email,
       telefono,
       web,
-      ubicacion: texto(o.ubicacion, 80),
-      resumen: texto(o.resumen, 280),
+      ubicacion: texto(o.ubicacion, LIMITES_TARJETA.ubicacion),
+      resumen: texto(o.resumen, LIMITES_TARJETA.resumen),
       enlaces,
       color,
+      modelo: esModeloTarjeta(o.modelo) ? o.modelo : MODELO_TARJETA_POR_DEFECTO,
+      qr: o.qr !== false,
     },
   };
 }

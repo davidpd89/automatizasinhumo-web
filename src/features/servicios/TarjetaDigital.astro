@@ -1,0 +1,55 @@
+---
+/**
+ * Tarjeta digital: la misma maqueta en la página pública (/c/<slug>, con enlaces y QR reales) y en el
+ * configurador del estudio (`muestra`: sin enlaces; los textos llevan data-campo y los bloques
+ * data-bloque para que el estudio los rellene y oculte al vuelo). Colores: ver tarjeta-digital.css.
+ */
+import { renderSVG } from 'uqr';
+import '../../styles/tarjeta-digital.css';
+import type { DatosTarjeta } from './publicados';
+
+interface Props {
+  datos: DatosTarjeta;
+  /** Dirección pública (QR y «Guardar contacto»). */
+  slug?: string;
+  url?: string;
+  muestra?: boolean;
+}
+const { datos: d, slug = 'ejemplo', url = 'https://automatizasinhumo.com/c/ejemplo', muestra = false } = Astro.props;
+const Nombre = muestra ? 'p' : 'h1';
+const Boton = muestra ? 'span' : 'a';
+const iniciales = d.nombre
+  .split(/\s+/)
+  .slice(0, 2)
+  .map((s) => s[0]?.toUpperCase() ?? '')
+  .join('');
+const tel = d.telefono.replace(/[^\d+]/g, '');
+const host = d.web ? new URL(d.web).hostname.replace(/^www\./, '') : '';
+const qr = renderSVG(url, { border: 1 });
+---
+<article class="tj" data-modelo={d.modelo}>
+  <header class="tj-cab">
+    <div class="tj-ini" aria-hidden="true" data-campo="iniciales">{iniciales}</div>
+    <Nombre class="tj-nombre" data-campo="nombre">{d.nombre}</Nombre>
+    <p class="tj-cargo" data-bloque="cargo" hidden={!d.cargo}><span data-campo="cargo">{d.cargo}</span></p>
+    <p class="tj-cargo" data-bloque="ubicacion" hidden={!d.ubicacion}><span data-campo="ubicacion">{d.ubicacion}</span></p>
+  </header>
+  <div class="tj-cuerpo">
+    <p class="tj-resumen" data-bloque="resumen" data-campo="resumen" hidden={!d.resumen}>{d.resumen}</p>
+    <Boton class="tj-btn tj-guardar" href={muestra ? undefined : `/c/${slug}/contacto.vcf`} download={muestra ? undefined : `${slug}.vcf`}>Guardar contacto</Boton>
+    <Boton class="tj-btn" data-bloque="telefono" href={muestra ? undefined : `tel:${tel}`} hidden={!d.telefono}>Llamar <span data-campo="telefono">{d.telefono}</span></Boton>
+    <Boton class="tj-btn" data-bloque="email" href={muestra ? undefined : `mailto:${d.email}`} hidden={!d.email}>Escribir <span data-campo="email">{d.email}</span></Boton>
+    <Boton class="tj-btn" data-bloque="web" href={muestra ? undefined : d.web} rel={muestra ? undefined : 'noopener'} hidden={!d.web}>Web <span data-campo="web">{host}</span></Boton>
+    {
+      d.enlaces.map((e) => (
+        <Boton class="tj-btn" data-bloque="linkedin" href={muestra ? undefined : e.url} rel={muestra ? undefined : 'noopener'}>
+          {e.etiqueta}
+        </Boton>
+      ))
+    }
+    <div class="tj-qr" data-bloque="qr" hidden={!d.qr}>
+      <Fragment set:html={qr} />
+      <span>Enseña este QR para compartir la tarjeta</span>
+    </div>
+  </div>
+</article>

@@ -153,6 +153,45 @@
     gap: var(--ds-hueco-4);
     margin-top: var(--ds-hueco-4);
   }
+  /* Paso 1: la galería cabe en la columna del formulario y se desplaza dentro, así la vista previa
+     (a la derecha) y los ajustes de debajo no quedan lejos. */
+  .rejilla-caja {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    max-height: 30rem;
+    overflow-y: auto;
+    padding: var(--ds-hueco-2);
+    border: 1px solid var(--color-line);
+    border-radius: var(--ds-radio-tarjeta);
+    overscroll-behavior: contain;
+  }
+  .rejilla-caja:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .cuenta {
+    display: block;
+    margin-top: var(--ds-hueco-1);
+    text-align: right;
+    font-size: var(--ds-texto-small);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-muted);
+  }
+  .limite {
+    margin-top: var(--ds-hueco-2);
+    font-size: var(--ds-texto-small);
+    color: var(--color-muted);
+  }
+  .subbloque {
+    margin-top: var(--ds-hueco-4);
+  }
+  .casilla-grande {
+    font-size: var(--ds-texto-h3);
+    font-weight: 600;
+  }
+  .ayuda-bloque {
+    margin-top: var(--ds-hueco-1);
+    color: var(--color-muted);
+  }
   .diseno {
     overflow: hidden;
   }
@@ -606,4 +645,101 @@
   .servicio-web .filas {
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   }
+}
+
+/* Guía con ventanitas: aviso la primera vez y botón para repetirla en cada paso. */
+.guia-aviso {
+  display: grid;
+  gap: 0.6rem;
+  margin-block: 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--ds-borde);
+  border-radius: var(--ds-radio-tarjeta);
+  background: var(--ds-superficie-suave);
+  color: var(--ds-texto);
+}
+.guia-aviso[hidden] {
+  display: none;
+}
+.guia-boton {
+  margin-inline-start: auto;
+  background: none;
+  border: 0;
+  padding: 0.25rem 0;
+  color: var(--ds-enlace, var(--ds-primario-texto, currentColor));
+  font: inherit;
+  font-size: var(--ds-texto-small);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Configurador de la tarjeta digital: modelos en miniatura (la misma maqueta que la página pública) y vista en vivo. */
+[data-tarjeta-form] {
+  --acento: #176b5a;
+  --acento2: #0e4438;
+  --sobre: #fff;
+  max-width: 64rem;
+}
+.rejilla-tj {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--ds-hueco-4);
+}
+.tj-opcion {
+  display: grid;
+  gap: 0.15rem;
+  align-content: start;
+  padding: var(--ds-hueco-2);
+  border: 1px solid var(--ds-borde);
+  border-radius: var(--ds-radio-tarjeta);
+  cursor: pointer;
+}
+.tj-opcion:has(input:checked) {
+  border-color: var(--ds-enlace);
+  outline: 2px solid var(--ds-enlace);
+}
+.tj-opcion:has(input:focus-visible) {
+  outline: 3px solid var(--ds-enlace);
+  outline-offset: 2px;
+}
+.tj-opcion input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.tj-opcion small {
+  color: var(--color-muted);
+}
+.tj-mini {
+  display: block;
+  position: relative;
+  height: 14rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: var(--ds-superficie-suave);
+  pointer-events: none;
+}
+.tj-mini .tj {
+  width: 26rem;
+  max-width: none;
+  transform: scale(0.38);
+  transform-origin: 0 0;
+}
+.tj-editor {
+  display: grid;
+  gap: var(--ds-hueco-6);
+  align-items: start;
+}
+@media (min-width: 52rem) {
+  .tj-editor {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+  .tj-vista {
+    position: sticky;
+    top: 6rem;
+  }
+}
+.tj-vista {
+  display: grid;
+  justify-items: center;
 }

@@ -16,6 +16,20 @@ export const templateSchema = z.enum([
 	"pikachu",
 	"rhyhorn",
 	"scizor",
+	"aurora",
+	"coral",
+	"lienzo",
+	"nocturno",
+	"mosaico",
+	"prisma",
+	"brisa",
+	"vertice",
+	"oasis",
+	"zafiro",
+	"tinta",
+	"pixel",
+	"cometa",
+	"trazo",
 ]);
 
 export type Template = z.infer<typeof templateSchema>;

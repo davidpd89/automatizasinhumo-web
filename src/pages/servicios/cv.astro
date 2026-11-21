@@ -10,38 +10,53 @@ import {
   ESTILOS_LETRA,
   EXTRAS_CV,
   FILTROS_DISENO,
+  FONDOS,
+  GUIA_CV,
+  LIMITES_CV,
+  FORMAS,
   MOTOR_CV,
   PAQUETES_CV,
   PASOS_CV,
+  POSICIONES,
+  SOMBREADOS,
   TAMANOS,
   euros,
   filtrosDe,
   miniaturaCv,
 } from '../../features/servicios/cv';
+import { LIMITES_TARJETA, MODELOS_TARJETA } from '../../features/servicios/modelosTarjeta';
+import TarjetaDigital from '../../features/servicios/TarjetaDigital.astro';
+import type { DatosTarjeta } from '../../features/servicios/publicados';
 
 // Estudio de CV: sección nueva de servicios, todavía sin publicar (noindex y sin enlaces).
 // Todo ocurre en el navegador: elegir diseño, rellenar, personalizar y ver la vista previa
 // con marca de agua. El motor (cv-estudio/) se carga solo al elegir un diseño.
 Astro.response.headers.set('X-Robots-Tag', 'noindex');
 
-const { disenada, personalizable } = PAQUETES_CV;
-const formas = [
-  ['ninguna', 'Sin formas'],
-  ['circulos', 'Círculos'],
-  ['rombos', 'Rombos'],
-  ['ondas', 'Ondas'],
-  ['esquinas', 'Esquinas'],
-  ['puntos', 'Puntos'],
-  ['franja', 'Franja lateral'],
-] as const;
+const { disenada } = PAQUETES_CV;
 const config = JSON.stringify({
   motor: MOTOR_CV,
   porDefecto: DISENO_POR_DEFECTO,
   disenos: DISENOS_CV,
+  guia: GUIA_CV,
   paquetes: PAQUETES_CV,
   extras: EXTRAS_CV,
 });
 const campo = 'campo';
+// Tarjeta de ejemplo para el configurador: así se ve cada modelo antes de poner tus datos.
+const ejemploTarjeta: DatosTarjeta = {
+  nombre: 'Lucía Martín',
+  cargo: 'Responsable de atención al cliente',
+  email: 'lucia@correo.es',
+  telefono: '+34 600 123 456',
+  web: 'https://lucia-martin.es',
+  ubicacion: 'Valencia',
+  resumen: 'Ocho años coordinando equipos de atención al cliente.',
+  enlaces: [{ etiqueta: 'LinkedIn', url: 'https://linkedin.com/in/lucia-martin' }],
+  color: '#176b5a',
+  modelo: 'clasica',
+  qr: true,
+};
 ---
 
 <Layout
@@ -54,142 +69,60 @@ const campo = 'campo';
       <span class="etiqueta">Servicios · Currículum</span>
       <h1 class="mt-4 max-w-3xl font-serif text-4xl font-bold leading-tight text-ink sm:text-5xl">Tu currículum, paso a paso</h1>
       <p class="mt-5 max-w-2xl text-lg leading-7 text-muted">
-        Elige un diseño, escribe tus datos una sola vez y míralo al momento. Si quieres darle tu toque, la versión personalizable
-        te deja cambiar el color y añadir formas.
+        Elige un diseño viendo un ejemplo, escribe tus datos una sola vez y míralo al momento. Si quieres darle tu toque,
+        puedes cambiar los colores, las formas, el sombreado y el fondo.
       </p>
     </header>
 
     <div class="progreso-fijo">
       <Progreso pasos={PASOS_CV} etiqueta="Pasos para hacer tu currículum" />
+      <button type="button" class="guia-boton" data-guia-abrir>Guía de este paso</button>
     </div>
 
+    <aside class="guia-aviso" data-guia-aviso hidden aria-label="Guía del estudio">
+      <p><strong>¿Primera vez aquí?</strong> Te lo enseñamos en medio minuto, paso a paso.</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="boton boton-principal boton-compacto" data-guia-abrir>Ver la guía</button>
+        <button type="button" class="boton boton-secundario boton-compacto" data-guia-no>Ahora no</button>
+      </div>
+    </aside>
+
     <form id="estudio-form" class="mt-8" novalidate autocomplete="on">
-      <!-- 1 · Diseño -->
-      <section data-paso="plantilla" aria-labelledby="paso-plantilla">
-        <h2 id="paso-plantilla" class="paso-titulo">Elige el diseño que más te guste</h2>
-        <p class="paso-entradilla">Debajo de cada uno tienes el precio final. Podrás cambiarlo después sin volver a escribir nada.</p>
-
-        <fieldset class="mt-6">
-          <legend class="sr-only">Diseño del currículum</legend>
-
-          <label class="tarjeta destacada">
-            <input type="radio" name="diseno" value="personalizable" class="sr-only" />
-            <img src={miniaturaCv('personalizable')} alt="Ejemplo de currículum personalizado con círculos terracota y sombreado" width="480" height="679" loading="lazy" decoding="async" />
-            <span class="destacada-texto">
-              <span class="etiqueta">A tu manera</span>
-              <strong class="mt-3 block font-serif text-2xl text-ink">{personalizable.nombre}</strong>
-              <span class="mt-2 block text-muted">{personalizable.resumen}</span>
-              <ul class="incluye">
-                {personalizable.incluye.map((x) => <li>{x}</li>)}
-              </ul>
-              <span class="precio precio-grande">{euros(personalizable.precio)}</span>
-              <span class="elegir" aria-hidden="true">Elegir personalizable</span>
-            </span>
-          </label>
-
-          <p class="rejilla-titulo">O elige uno de nuestros diseños listos · <strong>{euros(disenada.precio)}</strong></p>
-          <div class="filtros" role="radiogroup" aria-label="Ver diseños" data-filtros-diseno>
-            {FILTROS_DISENO.map((f, i) => (
-              <label class="forma">
-                <input type="radio" name="ver" value={f.id} class="sr-only" checked={i === 0} />
-                <span>{f.nombre} <small>{DISENOS_CV.filter(f.cumple).length}</small></span>
-              </label>
-            ))}
-          </div>
-          <p class="filtro-nota" data-nota-filtro="una-columna" hidden>Los filtros automáticos de las empresas leen mejor los diseños de una columna.</p>
-          <div class="rejilla">
-            {DISENOS_CV.map((d) => (
-              <label class="tarjeta diseno" data-filtros={filtrosDe(d)}>
-                <input type="radio" name="diseno" value={d.id} class="sr-only" />
-                <img src={miniaturaCv(d.id)} alt={`Diseño ${d.nombre}: ${d.estilo.toLowerCase()}`} width="480" height="679" loading="lazy" decoding="async" />
-                <span class="diseno-pie">
-                  <span class="min-w-0">
-                    <strong class="block truncate text-ink">{d.nombre}</strong>
-                    <span class="block truncate text-xs text-faint">{d.estilo}</span>
-                  </span>
-                  <span class="precio">{euros(disenada.precio)}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <p class="aviso" role="alert" data-error="plantilla" hidden>Elige un diseño para seguir.</p>
-        <div class="paso-acciones">
-          <button type="button" class="boton boton-principal" data-siguiente>Siguiente: tus datos</button>
-        </div>
-      </section>
-
-      <!-- 2 · Datos -->
-      <section data-paso="datos" aria-labelledby="paso-datos" hidden>
-        <h2 id="paso-datos" class="paso-titulo">Escribe tus datos</h2>
-        <p class="paso-entradilla">Lo que escribes se guarda solo en este navegador. A la derecha ves cómo queda.</p>
+      <!-- 1 · Diseño y estilo: se elige viendo un ejemplo; los datos van después -->
+      <section data-paso="diseno" aria-labelledby="paso-diseno">
+        <h2 id="paso-diseno" class="paso-titulo">Elige tu diseño y ponle tu estilo</h2>
+        <p class="paso-entradilla">Lo ves al momento con un ejemplo. Cuando te guste, escribes tus datos y se quedan con este diseño. Desde <strong>{euros(disenada.precio)}</strong>.</p>
         <div class="con-vista">
           <div class="min-w-0">
-            <div class="flex flex-wrap gap-2">
-              <label class="boton boton-principal boton-compacto importar">
-                <input type="file" name="importar" class="sr-only" accept=".pdf,.docx,.zip,.json,application/pdf" data-importar />
-                Usar mi CV actual
-              </label>
-              <button type="button" class="boton boton-secundario boton-compacto" data-ejemplo>Rellenar con un ejemplo</button>
-              <button type="button" class="boton boton-secundario boton-compacto" data-vaciar>Empezar en blanco</button>
-            </div>
-            <p class="importar-nota" data-estado-importar role="status" aria-live="polite">
-              ¿Ya tienes un CV? Súbelo en PDF o Word, o la exportación de LinkedIn (.zip), y rellenamos los campos por ti. Se lee en tu navegador.
-            </p>
-
-            <fieldset class="bloque">
-              <legend>Sobre ti</legend>
-              <div class="filas">
-                <label class={campo}>Nombre y apellidos *<input name="nombre" autocomplete="name" required maxlength="120" /></label>
-                <label class={campo}>Puesto o titular<input name="titular" autocomplete="organization-title" maxlength="160" placeholder="Ej.: Administrativa contable" /></label>
-                <label class={campo}>Correo<input name="email" type="email" autocomplete="email" maxlength="160" /></label>
-                <label class={campo}>Teléfono<input name="telefono" type="tel" autocomplete="tel" maxlength="60" /></label>
-                <label class={campo}>Ciudad<input name="ubicacion" autocomplete="address-level2" maxlength="120" /></label>
+            <fieldset class="bloque" data-guia="galeria">
+              <legend>1 · Diseño</legend>
+              <div class="filtros" role="radiogroup" aria-label="Ver diseños" data-filtros-diseno data-guia="filtros">
+                {FILTROS_DISENO.map((f, i) => (
+                  <label class="forma">
+                    <input type="radio" name="ver" value={f.id} class="sr-only" checked={i === 0} />
+                    <span>{f.nombre} <small>{DISENOS_CV.filter(f.cumple).length}</small></span>
+                  </label>
+                ))}
               </div>
-              <label class={campo}>Resumen<textarea name="resumen" rows="4" maxlength="1500" placeholder="Dos o tres frases: qué haces y qué has conseguido."></textarea></label>
+              <p class="filtro-nota" data-nota-filtro="una-columna" hidden>Los filtros automáticos de las empresas leen mejor los diseños de una columna.</p>
+              <div class="rejilla rejilla-caja" tabindex="0" role="group" aria-label="Diseños de currículum">
+                {DISENOS_CV.map((d) => (
+                  <label class="tarjeta diseno" data-filtros={filtrosDe(d)}>
+                    <input type="radio" name="diseno" value={d.id} class="sr-only" />
+                    <img src={miniaturaCv(d.id)} alt={`Diseño ${d.nombre}: ${d.estilo.toLowerCase()}`} width="480" height="679" loading="lazy" decoding="async" />
+                    <span class="diseno-pie">
+                      <span class="min-w-0">
+                        <strong class="block truncate text-ink">{d.nombre}</strong>
+                        <span class="block truncate text-xs text-faint">{d.estilo}</span>
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
             </fieldset>
 
-            <fieldset class="bloque" data-lista="experiencia">
-              <legend>Experiencia</legend>
-              <div data-items></div>
-              <button type="button" class="anadir" data-anadir>+ Añadir experiencia</button>
-            </fieldset>
-
-            <fieldset class="bloque" data-lista="formacion">
-              <legend>Formación</legend>
-              <div data-items></div>
-              <button type="button" class="anadir" data-anadir>+ Añadir formación</button>
-            </fieldset>
-
-            <fieldset class="bloque" data-lista="habilidades">
-              <legend>Habilidades</legend>
-              <div data-items></div>
-              <button type="button" class="anadir" data-anadir>+ Añadir habilidad</button>
-            </fieldset>
-
-            <fieldset class="bloque" data-lista="idiomas">
-              <legend>Idiomas</legend>
-              <div data-items></div>
-              <button type="button" class="anadir" data-anadir>+ Añadir idioma</button>
-            </fieldset>
-          </div>
-          <div data-hueco-vista></div>
-        </div>
-        <p class="aviso" role="alert" data-error="datos" hidden>Escribe al menos tu nombre para seguir.</p>
-        <div class="paso-acciones">
-          <button type="button" class="boton boton-secundario" data-atras>Atrás</button>
-          <button type="button" class="boton boton-principal" data-siguiente>Siguiente: personaliza</button>
-        </div>
-      </section>
-
-      <!-- 3 · Personaliza -->
-      <section data-paso="personaliza" aria-labelledby="paso-personaliza" hidden>
-        <h2 id="paso-personaliza" class="paso-titulo">Dale tu toque</h2>
-        <p class="paso-entradilla">Elige la letra y el tamaño<span data-solo="personalizable">, y cambia la base, el color y las formas</span>. La vista previa se actualiza sola.</p>
-        <div class="con-vista">
-          <div class="min-w-0">
-            <fieldset class="bloque">
-              <legend>Letra</legend>
+            <fieldset class="bloque" data-guia="letra">
+              <legend>2 · Letra</legend>
               <div class="letras">
                 {ESTILOS_LETRA.map((e) => (
                   <label class="letra">
@@ -225,73 +158,175 @@ const campo = 'campo';
               </div>
             </fieldset>
 
-            <div class="tarjeta mejora" data-solo="disenada">
-              <p class="font-semibold text-ink">Los colores y las formas van tal cual, como en la miniatura.</p>
-              <p class="mt-1 text-muted">
-                Con la versión personalizable eliges el color y añades círculos, rombos, ondas o sombreado
-                por <strong class="text-ink" data-diferencia></strong> más.
-              </p>
-              <div class="mt-4 flex flex-wrap gap-2">
-                <button type="button" class="boton boton-secundario boton-compacto" data-pasar-personalizable>Probar la personalizable</button>
-              </div>
-            </div>
-
-            <div data-solo="personalizable">
-              <fieldset class="bloque">
-                <legend>Diseño de partida</legend>
-                <label class={campo}>Base
-                  <select name="base">
-                    {DISENOS_CV.map((d) => <option value={d.id}>{d.nombre} · {d.estilo}</option>)}
-                  </select>
-                </label>
-              </fieldset>
-
-              <fieldset class="bloque">
-                <legend>Color</legend>
-                <div class="muestras">
-                  {COLORES_CV.map((c) => (
-                    <label class="muestra" title={c.nombre}>
-                      <input type="radio" name="color" value={c.valor} class="sr-only" />
-                      <span style={`--muestra:${c.valor}`} aria-hidden="true"></span>
-                      <span class="sr-only">{c.nombre}</span>
+            <fieldset class="bloque tarjeta mejora" data-guia="personalizar">
+              <legend>3 · A tu manera</legend>
+              <label class="casilla casilla-grande">
+                <input type="checkbox" name="personalizar" />
+                <span>Personalizar el diseño · <strong>+<span data-diferencia></span></strong></span>
+              </label>
+              <p class="ayuda-bloque">Tu color, formas, sombreado y fondo. Lo ves a la derecha mientras lo cambias.</p>
+              <div data-solo-personal hidden>
+                <div class="subbloque">
+                  <span class="medida-titulo">Color principal</span>
+                  <div class="muestras">
+                    {COLORES_CV.map((c) => (
+                      <label class="muestra" title={c.nombre}>
+                        <input type="radio" name="color" value={c.valor} class="sr-only" />
+                        <span style={`--muestra:${c.valor}`} aria-hidden="true"></span>
+                        <span class="sr-only">{c.nombre}</span>
+                      </label>
+                    ))}
+                    <label class="muestra muestra-libre" title="Otro color">
+                      <input type="color" name="colorLibre" value="#176b5a" aria-label="Otro color" />
                     </label>
-                  ))}
-                  <label class="muestra muestra-libre" title="Otro color">
-                    <input type="color" name="colorLibre" value="#176b5a" aria-label="Otro color" />
+                  </div>
+                </div>
+                <div class="subbloque">
+                  <span class="medida-titulo">Color de acento</span>
+                  <div class="muestras">
+                    {COLORES_CV.map((c) => (
+                      <label class="muestra" title={c.nombre}>
+                        <input type="radio" name="color2" value={c.valor} class="sr-only" />
+                        <span style={`--muestra:${c.valor}`} aria-hidden="true"></span>
+                        <span class="sr-only">{c.nombre}</span>
+                      </label>
+                    ))}
+                    <label class="muestra muestra-libre" title="Otro color">
+                      <input type="color" name="colorLibre2" value="#e0a526" aria-label="Otro color" />
+                    </label>
+                  </div>
+                </div>
+                <div class="subbloque" role="radiogroup" aria-label="Forma decorativa">
+                  <span class="medida-titulo" aria-hidden="true">Forma</span>
+                  <div class="formas">
+                    {Object.entries(FORMAS).map(([v, t]) => (
+                      <label class="forma">
+                        <input type="radio" name="forma" value={v} class="sr-only" />
+                        <span>{t}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div class="subbloque" role="radiogroup" aria-label="Dónde van las formas">
+                  <span class="medida-titulo" aria-hidden="true">Dónde</span>
+                  <div class="formas">
+                    {Object.entries(POSICIONES).map(([v, t]) => (
+                      <label class="forma">
+                        <input type="radio" name="posicion" value={v} class="sr-only" />
+                        <span>{t}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div class="subbloque">
+                  <label class="campo">Intensidad de formas y sombreado
+                    <input type="range" name="intensidad" min="0.1" max="1" step="0.05" value="0.7" />
                   </label>
                 </div>
-              </fieldset>
-
-              <fieldset class="bloque">
-                <legend>Formas</legend>
-                <div class="formas">
-                  {formas.map(([v, t]) => (
-                    <label class="forma">
-                      <input type="radio" name="forma" value={v} class="sr-only" />
-                      <span>{t}</span>
-                    </label>
-                  ))}
+                <div class="subbloque" role="radiogroup" aria-label="Sombreado">
+                  <span class="medida-titulo" aria-hidden="true">Sombreado</span>
+                  <div class="formas">
+                    {Object.entries(SOMBREADOS).map(([v, t]) => (
+                      <label class="forma">
+                        <input type="radio" name="sombreado" value={v} class="sr-only" />
+                        <span>{t}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-                <label class={campo}>Intensidad
-                  <input type="range" name="intensidad" min="0.2" max="1" step="0.1" value="0.7" />
-                </label>
-                <label class="casilla"><input type="checkbox" name="sombreado" /> Sombreado de fondo en la cabecera</label>
-              </fieldset>
-            </div>
+                <div class="subbloque" role="radiogroup" aria-label="Fondo de la página">
+                  <span class="medida-titulo" aria-hidden="true">Fondo</span>
+                  <div class="formas">
+                    {Object.entries(FONDOS).map(([v, t]) => (
+                      <label class="forma">
+                        <input type="radio" name="fondo" value={v} class="sr-only" />
+                        <span>{t}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </fieldset>
           </div>
           <div data-hueco-vista></div>
         </div>
+        <div class="paso-acciones">
+          <button type="button" class="boton boton-principal" data-siguiente data-guia="siguiente">Siguiente: tus datos</button>
+        </div>
+      </section>
+
+      <!-- 2 · Datos -->
+      <section data-paso="datos" aria-labelledby="paso-datos" hidden>
+        <h2 id="paso-datos" class="paso-titulo">Escribe tus datos</h2>
+        <p class="paso-entradilla">Lo que escribes se guarda solo en este navegador. A la derecha ves cómo queda.</p>
+        <div class="con-vista">
+          <div class="min-w-0">
+            <div class="flex flex-wrap gap-2" data-guia="importar">
+              <label class="boton boton-principal boton-compacto importar">
+                <input type="file" name="importar" class="sr-only" accept=".pdf,.docx,.zip,.json,application/pdf" data-importar />
+                Usar mi CV actual
+              </label>
+              <button type="button" class="boton boton-secundario boton-compacto" data-ejemplo>Rellenar con un ejemplo</button>
+              <button type="button" class="boton boton-secundario boton-compacto" data-vaciar>Empezar en blanco</button>
+            </div>
+            <p class="importar-nota" data-estado-importar role="status" aria-live="polite">
+              ¿Ya tienes un CV? Súbelo en PDF o Word, o la exportación de LinkedIn (.zip), y rellenamos los campos por ti. Se lee en tu navegador.
+            </p>
+
+            <fieldset class="bloque" data-guia="sobre-ti">
+              <legend>Sobre ti</legend>
+              <div class="filas">
+                <label class={campo}>Nombre y apellidos *<input name="nombre" autocomplete="name" required maxlength="120" /></label>
+                <label class={campo}>Puesto o titular<input name="titular" autocomplete="organization-title" maxlength="160" placeholder="Ej.: Administrativa contable" /></label>
+                <label class={campo}>Correo<input name="email" type="email" autocomplete="email" maxlength="160" /></label>
+                <label class={campo}>Teléfono<input name="telefono" type="tel" autocomplete="tel" maxlength="60" /></label>
+                <label class={campo}>Ciudad<input name="ubicacion" autocomplete="address-level2" maxlength="120" /></label>
+              </div>
+              <label class={campo}>Resumen <span class="ayuda">(2 o 3 frases)</span><textarea name="resumen" rows="4" maxlength={LIMITES_CV.resumen} data-cuenta placeholder="Dos o tres frases: qué haces y qué has conseguido."></textarea><small class="cuenta" aria-live="off"></small></label>
+            </fieldset>
+
+            <fieldset class="bloque" data-guia="listas" data-lista="experiencia" data-max={LIMITES_CV.items.experiencia}>
+              <legend>Experiencia</legend>
+              <div data-items></div>
+              <button type="button" class="anadir" data-anadir>+ Añadir experiencia</button>
+              <p class="limite" data-limite hidden>Es el máximo: con más, el CV se alarga y se lee peor.</p>
+            </fieldset>
+
+            <fieldset class="bloque" data-lista="formacion" data-max={LIMITES_CV.items.formacion}>
+              <legend>Formación</legend>
+              <div data-items></div>
+              <button type="button" class="anadir" data-anadir>+ Añadir formación</button>
+              <p class="limite" data-limite hidden>Es el máximo: con más, el CV se alarga y se lee peor.</p>
+            </fieldset>
+
+            <fieldset class="bloque" data-lista="habilidades" data-max={LIMITES_CV.items.habilidades}>
+              <legend>Habilidades</legend>
+              <div data-items></div>
+              <button type="button" class="anadir" data-anadir>+ Añadir habilidad</button>
+              <p class="limite" data-limite hidden>Es el máximo: con más, el CV se alarga y se lee peor.</p>
+            </fieldset>
+
+            <fieldset class="bloque" data-lista="idiomas" data-max={LIMITES_CV.items.idiomas}>
+              <legend>Idiomas</legend>
+              <div data-items></div>
+              <button type="button" class="anadir" data-anadir>+ Añadir idioma</button>
+              <p class="limite" data-limite hidden>Es el máximo: con más, el CV se alarga y se lee peor.</p>
+            </fieldset>
+          </div>
+          <div data-hueco-vista></div>
+        </div>
+        <p class="aviso" role="alert" data-error="datos" hidden>Escribe al menos tu nombre para seguir.</p>
         <div class="paso-acciones">
           <button type="button" class="boton boton-secundario" data-atras>Atrás</button>
           <button type="button" class="boton boton-principal" data-siguiente>Siguiente: revisa</button>
         </div>
       </section>
 
-      <!-- 4 · Revisa -->
+      <!-- 3 · Revisa -->
       <section data-paso="revisa" aria-labelledby="paso-revisa" hidden>
         <h2 id="paso-revisa" class="paso-titulo">Revisa cómo queda</h2>
         <p class="paso-entradilla">Así sale tu currículum, página a página. La marca de agua desaparece en el PDF que descargas.</p>
-        <ul class="repaso" data-repaso></ul>
+        <ul class="repaso" data-repaso data-guia="repaso"></ul>
         <div class="revisa-vista" data-hueco-vista></div>
         <div class="paso-acciones">
           <button type="button" class="boton boton-secundario" data-atras>Atrás</button>
@@ -299,7 +334,7 @@ const campo = 'campo';
         </div>
       </section>
 
-      <!-- 5 · Descarga -->
+      <!-- 4 · Descarga -->
       <section data-paso="descarga" aria-labelledby="paso-descarga" hidden>
         <h2 id="paso-descarga" class="paso-titulo">Descarga tu currículum</h2>
         <div class="tarjeta resumen">
@@ -308,7 +343,7 @@ const campo = 'campo';
             <div><dt>Modalidad</dt><dd data-res="modalidad"></dd></div>
           </dl>
           <ul class="incluye" data-res="incluye"></ul>
-          <div data-solo-compra>
+          <div data-solo-compra data-guia="extras">
             {
               EXTRAS_CV.map((x) => (
                 <label class="extra" id={x.id}>
@@ -325,26 +360,64 @@ const campo = 'campo';
             <p class="total"><span>Total</span><strong data-res="precio"></strong></p>
           </div>
           <p class="pagado" data-solo-pagado hidden>Pedido <strong data-res="ref"></strong> pagado. Tu PDF sale sin marca de agua.</p>
-          <button type="button" class="boton boton-principal boton-destello w-full" data-comprar><span>Comprar y descargar el PDF</span></button>
+          <button type="button" class="boton boton-principal boton-destello w-full" data-comprar data-guia="comprar"><span>Comprar y descargar el PDF</span></button>
           <p class="mt-3 text-sm text-faint" role="status" data-estado-compra>PDF sin marca de agua, listo para enviar.</p>
         </div>
 
-        <!-- Tarjeta digital pagada: se publica aquí mismo con los datos del CV. -->
-        <div class="tarjeta publicar" data-tarjeta-form hidden>
-          <h3 class="font-serif text-xl font-bold text-ink">Tu tarjeta digital</h3>
-          <p class="mt-1 text-sm text-muted">Hemos rellenado los datos de tu CV. Cámbialos si quieres y publícala: queda en línea al momento.</p>
-          <div class="filas mt-4">
-            <label class="campo">Nombre<input data-t="nombre" maxlength="80" autocomplete="name" /></label>
-            <label class="campo">Cargo<input data-t="cargo" maxlength="100" /></label>
-            <label class="campo">Correo<input data-t="email" type="email" maxlength="254" autocomplete="email" /></label>
-            <label class="campo">Teléfono<input data-t="telefono" type="tel" maxlength="24" autocomplete="tel" /></label>
-            <label class="campo">Web<input data-t="web" maxlength="300" placeholder="tuweb.com" /></label>
-            <label class="campo">Ciudad<input data-t="ubicacion" maxlength="80" /></label>
-            <label class="campo">LinkedIn<input data-t="linkedin" maxlength="300" placeholder="linkedin.com/in/tu-nombre" /></label>
-            <label class="campo">Color<input data-t="color" type="color" /></label>
+        <!-- Tarjeta digital: se configura aquí (modelo, color, datos) en cuanto se elige el extra; se publica al pagarla. -->
+        <div class="tarjeta publicar" data-tarjeta-form data-guia="tarjeta" hidden>
+          <h3 class="font-serif text-xl font-bold text-ink">Diseña tu tarjeta digital</h3>
+          <p class="mt-1 text-sm text-muted">
+            Una página tuya con tu contacto y un QR para compartirla. Elige el modelo, ajusta los datos (los hemos sacado de tu CV) y
+            mírala al momento.
+          </p>
+
+          <fieldset class="bloque mt-4" data-tj-modelos>
+            <legend>Modelo</legend>
+            <div class="rejilla-tj">
+              {
+                MODELOS_TARJETA.map((m) => (
+                  <label class="tj-opcion">
+                    <input type="radio" name="tj-modelo" value={m.id} checked={m.id === 'clasica'} />
+                    <span class="tj-mini" aria-hidden="true">
+                      <TarjetaDigital datos={{ ...ejemploTarjeta, modelo: m.id }} muestra />
+                    </span>
+                    <strong>{m.nombre}</strong>
+                    <small>{m.resumen}</small>
+                  </label>
+                ))
+              }
+            </div>
+          </fieldset>
+
+          <div class="tj-editor mt-4">
+            <div>
+              <div class="filas">
+                <label class="campo">Nombre<input data-t="nombre" maxlength={LIMITES_TARJETA.nombre} autocomplete="name" /></label>
+                <label class="campo">Cargo<input data-t="cargo" maxlength={LIMITES_TARJETA.cargo} /></label>
+                <label class="campo">Correo<input data-t="email" type="email" maxlength="254" autocomplete="email" /></label>
+                <label class="campo">Teléfono<input data-t="telefono" type="tel" maxlength="24" autocomplete="tel" /></label>
+                <label class="campo">Web<input data-t="web" maxlength="300" placeholder="tuweb.com" /></label>
+                <label class="campo">Ciudad<input data-t="ubicacion" maxlength={LIMITES_TARJETA.ubicacion} /></label>
+                <label class="campo">LinkedIn<input data-t="linkedin" maxlength="300" placeholder="linkedin.com/in/tu-nombre" /></label>
+                <label class="campo">Color<input data-t="color" type="color" /></label>
+              </div>
+              <label class="campo">
+                Presentación breve <span class="ayuda">(hasta {LIMITES_TARJETA.resumen} caracteres)</span>
+                <textarea data-t="resumen" rows="3" maxlength={LIMITES_TARJETA.resumen}></textarea>
+                <small class="cuenta" data-tj-cuenta aria-live="off"></small>
+              </label>
+              <label class="extra mt-3"><input type="checkbox" data-t="qr" checked /><span><strong>Mostrar el código QR</strong><small>Quien lo escanee abre tu tarjeta y guarda tu contacto.</small></span></label>
+            </div>
+            <div class="tj-vista" data-tarjeta-vista aria-label="Vista previa de tu tarjeta">
+              <TarjetaDigital datos={ejemploTarjeta} muestra />
+            </div>
           </div>
-          <label class="campo">Presentación breve<textarea data-t="resumen" rows="2" maxlength="280"></textarea></label>
-          <button type="button" class="boton boton-principal mt-4" data-publicar>Publicar mi tarjeta</button>
+
+          <p class="mt-4 text-sm text-muted" data-tarjeta-nota>
+            La tarjeta se publica en cuanto completes el pago (se compra junto al CV). Hasta entonces puedes probar modelos y colores sin límite.
+          </p>
+          <button type="button" class="boton boton-principal mt-4" data-publicar disabled>Publicar mi tarjeta</button>
           <p class="mt-3 text-sm" role="status" data-estado-tarjeta></p>
         </div>
         <div class="paso-acciones">
@@ -354,7 +427,7 @@ const campo = 'campo';
     </form>
 
     <!-- Vista previa: un único panel que el script mueve al paso activo. -->
-    <aside class="vista" aria-label="Vista previa del currículum" data-vista hidden>
+    <aside class="vista" aria-label="Vista previa del currículum" data-vista data-guia="vista" hidden>
       <p class="vista-estado" role="status" data-estado>Preparando la vista previa…</p>
       <div class="vista-lienzo" data-lienzo></div>
     </aside>
@@ -373,7 +446,7 @@ const campo = 'campo';
         <label class={campo}>Ciudad<input data-k="lugar" maxlength="120" /></label>
         <label class={campo}>Fechas<input data-k="periodo" maxlength="60" placeholder="2021 – actualidad" /></label>
       </div>
-      <label class={campo}>Logros y tareas <span class="ayuda">(uno por línea)</span><textarea data-k="descripcion" rows="3" maxlength="2000"></textarea></label>
+      <label class={campo}>Logros y tareas <span class="ayuda">(uno por línea, hasta {LIMITES_CV.lineasDescripcion})</span><textarea data-k="descripcion" rows="3" maxlength={LIMITES_CV.descripcion} data-lineas={LIMITES_CV.lineasDescripcion} data-cuenta></textarea><small class="cuenta" aria-live="off"></small></label>
       <button type="button" class="quitar" data-quitar>Quitar</button>
     </div>
   </template>
