@@ -112,6 +112,7 @@
   --ds-hueco-2: 0.5rem;
   --ds-hueco-3: 0.75rem;
   --ds-hueco-4: 1rem;
+  --ds-hueco-5: 1.25rem;
   --ds-hueco-6: 1.5rem;
   --ds-hueco-8: 2rem;
   --ds-hueco-12: 3rem;
@@ -123,6 +124,7 @@
   --ds-radio-tarjeta: 1.25rem;
   --ds-radio-panel: 1.5rem; /* cabeceras de página y paneles grandes */
   --ds-radio-marco: 0.9rem;
+  --ds-radio-sutil: 0.4rem; /* miniaturas e insignias */
   --ds-radio-pildora: 999px;
 
   /* Degradados de marca, interpolados en oklch para que no pasen por tonos sucios. */

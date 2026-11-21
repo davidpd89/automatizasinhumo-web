@@ -1,14 +1,13 @@
 ---
 /**
- * STORE-OWNED. Catálogo nuevo del tema limpio (/servicios), con el mismo lenguaje que la
- * portada: fondo de marca, titular con degradado, píldoras y secciones de ui/.
+ * STORE-OWNED. Catálogo del tema limpio (/servicios): una sola rejilla de tarjetas con
+ * un filtro segmentado arriba, en vez de un panel por familia.
  *
- * Los servicios van por familias (primero el CV y lo que lo acompaña, luego las webs…).
- * Cada familia se distingue por su color, sin texto extra: data-familia="<id>" da
- * --familia y --familia-2 (tokens.css) y todo lo de dentro los lee: el sello con
- * degradado, la franja de cada tarjeta, las viñetas en rombo, el icono y el precio.
- * Un servicio nuevo o una familia nueva no tocan este fichero: solo los datos y, si es
- * una familia nueva, sus dos tokens.
+ * Cada tarjeta lleva el color de su familia (data-familia="<id>" da --familia y
+ * --familia-2, tokens.css): la cabecera visual, el icono, las viñetas y el precio lo leen.
+ * Lo disponible va primero y con todo su peso; lo que viene después, en una banda aparte
+ * y callada. Un servicio nuevo o una familia nueva no tocan este fichero: solo los datos.
+ * El filtro es mejora progresiva: sin JavaScript se ve todo.
  */
 import Icono from './IconoCat.astro';
 import Boton from './ui/Boton.astro';
@@ -30,6 +29,7 @@ interface Servicio {
 interface Familia {
   id: string;
   nombre: string;
+  corto: string;
   texto: string;
   icono: string;
   servicios: readonly Servicio[];
@@ -39,6 +39,11 @@ interface Props {
   proximas: readonly { id: string; nombre: string; icono: string }[];
 }
 const { familias, proximas } = Astro.props;
+
+const todos = familias.flatMap((f) => f.servicios.map((s) => ({ ...s, familia: f })));
+const listos = todos.flatMap((s) => (s.href ? [{ ...s, href: s.href }] : []));
+const pronto = todos.filter((s) => !s.href);
+const filtrables = familias.filter((f) => f.servicios.some((s) => s.href));
 ---
 
 <Fondo />
@@ -46,75 +51,90 @@ const { familias, proximas } = Astro.props;
 <section class="cabeza" aria-labelledby="servicios-titulo">
   <p class="antetitulo">Servicios</p>
   <h1 id="servicios-titulo">Elige qué quieres <span class="marca">tener listo hoy</span></h1>
-  <p class="subtitulo">Cada servicio se hace paso a paso, con vista previa al momento y precio cerrado. Pagas solo cuando te guste.</p>
-  <ul class="atajos" aria-label="Familias de servicios">
-    {familias.map((f) => (
-      <li data-familia={f.id}><Pildora href={`#familia-${f.id}`} icono={f.icono}>{f.nombre}</Pildora></li>
-    ))}
-  </ul>
+  <p class="subtitulo">Lo haces paso a paso, lo ves al momento y pagas solo cuando te guste.</p>
 </section>
 
-{familias.map((f) => {
-  const listos = f.servicios.filter((s) => s.href).length;
-  return (
-    <section id={`familia-${f.id}`} class="familia" data-familia={f.id} aria-labelledby={`familia-${f.id}-titulo`}>
-      <header class="familia-cabeza">
-        <span class="sello"><Icono name={f.icono} class="h-6 w-6" /></span>
-        <div class="familia-texto">
-          <h2 id={`familia-${f.id}-titulo`}>{f.nombre}</h2>
-          <p>{f.texto}</p>
-        </div>
-        <p class="cuenta">{listos > 0 ? `${listos} de ${f.servicios.length} disponibles` : 'Muy pronto'}</p>
-      </header>
+<div class="catalogo" data-catalogo>
+  <div class="filtros" role="radiogroup" aria-label="Filtrar servicios" data-filtros>
+    <label class="filtro">
+      <input type="radio" name="familia" value="todo" checked />
+      <span><Icono name="layout-dashboard" class="h-4 w-4" />Todo</span>
+    </label>
+    {filtrables.map((f) => (
+      <label class="filtro" data-familia={f.id}>
+        <input type="radio" name="familia" value={f.id} />
+        <span><Icono name={f.icono} class="h-4 w-4" />{f.corto}</span>
+      </label>
+    ))}
+  </div>
 
-      <ul class="rejilla">
-        {f.servicios.map((s) => (
-          <li class:list={['servicio', { listo: s.href, principal: s.href && s.imagen }]}>
-            {s.imagen && s.href && (
-              <span class="foto"><img src={s.imagen} alt="" width="480" height="679" loading="eager" decoding="async" /></span>
-            )}
-            <div class="cuerpo">
-              <span class="icono"><Icono name={s.icono} class="h-5 w-5" /></span>
-              <h3>{s.href ? <a href={s.href} class="enlace">{s.nombre}</a> : s.nombre}</h3>
-              <p class="texto">{s.texto}</p>
-              <ul class="puntos">
-                {s.puntos.map((p) => <li>{p}</li>)}
-              </ul>
-              <div class="pie">
-                {s.href ? (
-                  <>
-                    {s.desde && <p class="precio"><span>Desde</span> {s.desde}</p>}
-                    <Boton href={s.href} talla="compacta" class="ir">Empezar</Boton>
-                  </>
-                ) : (
-                  <p class="pronto"><Icono name="clock" class="h-4 w-4" />Muy pronto</p>
-                )}
-              </div>
-            </div>
-          </li>
+  <ul class="rejilla" aria-label="Servicios disponibles">
+    {listos.map((s, i) => (
+      <li class:list={['servicio', { principal: i === 0 && s.imagen }]} data-familia={s.familia.id} data-grupo={s.familia.id}>
+        <span class="visual" aria-hidden="true">
+          {s.imagen ? <img src={s.imagen} alt="" width="480" height="679" loading="eager" decoding="async" /> : <Icono name={s.icono} class="grande" />}
+        </span>
+        <div class="cuerpo">
+          <p class="etiqueta-familia"><Icono name={s.icono} class="h-4 w-4" />{s.familia.corto}</p>
+          <h2><a href={s.href} class="enlace">{s.nombre}</a></h2>
+          <p class="texto">{s.texto}</p>
+          <ul class="puntos">
+            {s.puntos.map((p) => <li>{p}</li>)}
+          </ul>
+          <div class="pie">
+            {s.desde && <p class="precio"><span>Desde</span> {s.desde}</p>}
+            <Boton href={s.href} talla="compacta" class="ir">Empezar</Boton>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  <p class="vacio" data-vacio hidden>No hay servicios en esta categoría todavía.</p>
+
+  {(pronto.length > 0 || proximas.length > 0) && (
+    <Seccion id="despues" antetitulo="Próximamente" titulo="Lo que viene después" entradilla="Entra aquí con el mismo método: eliges, rellenas, lo ves y lo tienes." separada>
+      <ul class="proximas" aria-label="Servicios en preparación">
+        {pronto.map((s) => (
+          <li data-familia={s.familia.id} data-grupo={s.familia.id}><Pildora icono={s.icono}>{s.nombre}</Pildora></li>
+        ))}
+        {proximas.map((p) => (
+          <li data-familia={p.id} data-grupo="todo-solo"><Pildora icono={p.icono}>{p.nombre}</Pildora></li>
         ))}
       </ul>
-    </section>
-  );
-})}
+    </Seccion>
+  )}
+</div>
 
-{proximas.length > 0 && (
-  <Seccion id="despues" antetitulo="Y después" entradilla="Los siguientes servicios entran aquí con el mismo método: eliges, rellenas, lo ves y lo tienes." separada>
-    <ul class="proximas" aria-label="Servicios en preparación">
-      {proximas.map((p) => (
-        <li data-familia={p.id}><Pildora icono={p.icono}>{p.nombre}</Pildora></li>
-      ))}
-    </ul>
-  </Seccion>
-)}
+<script>
+  // Filtro segmentado: oculta lo que no es de la familia elegida. Sin JS, todo visible.
+  const raiz = document.querySelector<HTMLElement>('[data-catalogo]');
+  if (raiz) {
+    const aplicar = (familia: string) => {
+      let visibles = 0;
+      raiz.querySelectorAll<HTMLElement>('.servicio').forEach((el) => {
+        const ver = familia === 'todo' || el.dataset.grupo === familia;
+        el.hidden = !ver;
+        if (ver) visibles += 1;
+      });
+      raiz.querySelectorAll<HTMLElement>('.proximas li').forEach((el) => {
+        el.hidden = familia !== 'todo' && el.dataset.grupo !== familia;
+      });
+      const vacio = raiz.querySelector<HTMLElement>('[data-vacio]');
+      if (vacio) vacio.hidden = visibles > 0;
+    };
+    raiz.querySelector('[data-filtros]')?.addEventListener('change', (e) => {
+      aplicar((e.target as HTMLInputElement).value);
+    });
+  }
+</script>
 
 <style>
-  /* ── Cabecera: la misma voz que la portada (titular con degradado de marca). ── */
   .cabeza {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-block: clamp(1rem, 4vh, 2.5rem) var(--ds-hueco-12);
+    padding-block: clamp(1rem, 4vh, 2.5rem) var(--ds-hueco-8);
     text-align: center;
   }
   .antetitulo {
@@ -136,106 +156,59 @@ const { familias, proximas } = Astro.props;
     color: transparent;
   }
   .subtitulo {
-    max-width: 38rem;
-    margin-top: var(--ds-hueco-6);
+    max-width: 34rem;
+    margin-top: var(--ds-hueco-4);
     font-size: var(--ds-texto-lead);
     line-height: 1.5;
     color: var(--color-muted);
     text-wrap: pretty;
   }
-  .atajos,
-  .proximas {
+
+  /* ── Filtro segmentado: una sola pieza, con el color de cada familia al elegirla. ── */
+  .filtros {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: var(--ds-hueco-1);
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto var(--ds-hueco-8);
+    overflow-x: auto;
+    border: 1px solid var(--color-line);
+    border-radius: var(--ds-radio-pildora);
+    background: color-mix(in oklab, var(--color-surface) 85%, transparent);
+    padding: var(--ds-hueco-1);
+    box-shadow: var(--ds-sombra-1);
+  }
+  .filtro { position: relative; flex: none; cursor: pointer; }
+  .filtro input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .filtro span {
+    display: inline-flex;
     gap: var(--ds-hueco-2);
-  }
-  .atajos { margin-top: var(--ds-hueco-8); }
-
-  /* Píldora con el color de su familia (fondo tenue, texto y borde del color). */
-  [data-familia] > :global(.pildora) {
-    border-color: color-mix(in oklab, var(--familia) 30%, transparent);
-    background: color-mix(in oklab, var(--familia) 9%, var(--color-surface));
-    color: var(--familia);
-  }
-
-  /* ── Familia: panel con un velo de su color arriba y una franja con degradado. ── */
-  .familia {
-    position: relative;
-    margin-block-end: var(--ds-hueco-12);
-    border: 1px solid color-mix(in oklab, var(--familia) 18%, var(--color-line));
-    border-radius: var(--ds-radio-panel);
-    background:
-      linear-gradient(180deg, color-mix(in oklab, var(--familia) 7%, transparent), transparent 14rem),
-      color-mix(in oklab, var(--color-surface) 70%, transparent);
-    padding: clamp(1.25rem, 3vw, 2.25rem);
-    scroll-margin-top: calc(var(--alto-cabecera, 5.5rem) + var(--ds-hueco-4));
-  }
-  .familia::before {
-    position: absolute;
-    inset: -1px -1px auto;
-    height: 4px;
-    border-radius: var(--ds-radio-panel) var(--ds-radio-panel) 0 0;
-    background: linear-gradient(90deg in oklch, var(--familia), var(--familia-2));
-    content: '';
-  }
-  .familia-cabeza {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: var(--ds-hueco-4);
     align-items: center;
-    margin-bottom: var(--ds-hueco-8);
+    min-height: var(--ds-toque);
+    border-radius: var(--ds-radio-pildora);
+    padding-inline: var(--ds-hueco-5);
+    font-weight: 600;
+    color: var(--color-muted);
+    transition: background var(--ds-mov-rapido), color var(--ds-mov-rapido);
   }
-  .sello {
-    display: grid;
-    place-items: center;
-    width: 3.25rem;
-    height: 3.25rem;
-    border-radius: 1rem;
-    background: linear-gradient(135deg in oklch, var(--familia), var(--familia-2));
-    box-shadow: 0 10px 24px -12px var(--familia);
+  .filtro:hover span { color: var(--color-ink); }
+  .filtro input:checked + span {
+    /* Texto blanco: el degradado solo oscurece (de --familia a una mezcla con tinta) para llegar a 4,5:1. */
+    background: linear-gradient(135deg in oklch, var(--familia), color-mix(in oklch, var(--familia) 70%, #000));
     color: #fff;
   }
-  .familia-texto h2 {
-    font-family: var(--font-serif);
-    font-size: var(--ds-texto-h2);
-    font-weight: 700;
-    letter-spacing: var(--ds-tracking-titular);
-    line-height: 1.1;
-    color: var(--color-ink);
-    text-wrap: balance;
-  }
-  .familia-texto p {
-    margin-top: var(--ds-hueco-1);
-    color: var(--color-muted);
-    text-wrap: pretty;
-  }
-  .cuenta {
-    grid-column: 1 / -1;
-    justify-self: start;
-    border-radius: var(--ds-radio-pildora);
-    background: color-mix(in oklab, var(--familia) 10%, transparent);
-    padding: 0.2rem 0.75rem;
-    font-size: var(--ds-texto-etiqueta);
-    font-weight: 600;
-    letter-spacing: var(--ds-tracking-etiqueta);
-    text-transform: uppercase;
-    color: var(--familia);
-  }
-  @media (min-width: 48rem) {
-    .familia-cabeza { grid-template-columns: auto minmax(0, 1fr) auto; }
-    .cuenta { grid-column: auto; justify-self: end; }
-  }
+  .filtro input:focus-visible + span { outline: 3px solid var(--familia); outline-offset: 2px; }
 
-  /* ── Tarjetas ── */
+  /* ── Rejilla: una tarjeta por servicio, sin paneles dentro de paneles. ── */
   .rejilla {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
     gap: var(--ds-hueco-6);
   }
   .servicio {
     position: relative;
     display: flex;
+    flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--color-line);
     border-radius: var(--ds-radio-tarjeta);
@@ -245,32 +218,36 @@ const { familias, proximas } = Astro.props;
       transform var(--ds-mov-normal) var(--ds-curva),
       box-shadow var(--ds-mov-normal);
   }
-  .servicio.listo:hover,
-  .servicio.listo:focus-within {
+  .servicio[hidden] { display: none; }
+  .servicio:hover,
+  .servicio:focus-within {
     transform: translateY(-3px);
     box-shadow: var(--ds-sombra-2);
   }
-  /* El que tiene foto ocupa dos columnas cuando caben: es el servicio de entrada. */
-  .principal { grid-column: 1 / -1; }
+  /* El de la foto es el servicio de entrada: ocupa dos columnas cuando caben. */
   @media (min-width: 48rem) {
-    .principal { grid-column: span 2; }
+    .principal { grid-column: 1 / -1; flex-direction: row; }
+    .principal .visual { flex: 0 0 44%; }
   }
-  .foto {
-    display: none;
-    flex: 0 0 42%;
-    align-items: center;
-    background: linear-gradient(160deg in oklch, color-mix(in oklab, var(--familia) 14%, #fff), color-mix(in oklab, var(--familia-2) 10%, #fff));
-    padding: var(--ds-hueco-4);
+  .visual {
+    display: grid;
+    place-items: center;
+    min-height: 9rem;
+    background: linear-gradient(160deg in oklch, color-mix(in oklab, var(--familia) 16%, #fff), color-mix(in oklab, var(--familia-2) 10%, #fff));
+    padding: var(--ds-hueco-6);
   }
-  .foto img {
-    width: 100%;
+  .visual img {
+    width: min(100%, 11rem);
     height: auto;
-    border-radius: 0.4rem;
+    border-radius: var(--ds-radio-sutil);
     box-shadow: var(--ds-sombra-2);
     transform: rotate(-2deg);
   }
-  @media (min-width: 36rem) {
-    .foto { display: flex; }
+  .visual :global(.grande) {
+    width: 4rem;
+    height: 4rem;
+    color: var(--familia);
+    opacity: 0.85;
   }
   .cuerpo {
     display: flex;
@@ -279,17 +256,18 @@ const { familias, proximas } = Astro.props;
     min-width: 0;
     padding: var(--ds-hueco-6);
   }
-  .icono {
-    display: grid;
-    place-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    background: color-mix(in oklab, var(--familia) 11%, transparent);
+  .etiqueta-familia {
+    display: inline-flex;
+    gap: var(--ds-hueco-2);
+    align-items: center;
+    font-size: var(--ds-texto-etiqueta);
+    font-weight: 600;
+    letter-spacing: var(--ds-tracking-etiqueta);
+    text-transform: uppercase;
     color: var(--familia);
   }
-  h3 {
-    margin-top: var(--ds-hueco-4);
+  h2 {
+    margin-top: var(--ds-hueco-2);
     font-family: var(--font-serif);
     font-size: var(--ds-texto-h3);
     font-weight: 700;
@@ -297,26 +275,15 @@ const { familias, proximas } = Astro.props;
     color: var(--color-ink);
   }
   /* Toda la tarjeta es clicable sin anidar enlaces: el ::after del título la cubre. */
-  .enlace {
-    color: inherit;
-    text-decoration: none;
-  }
-  .enlace::after {
-    position: absolute;
-    inset: 0;
-    content: '';
-  }
+  .enlace { color: inherit; text-decoration: none; }
+  .enlace::after { position: absolute; inset: 0; content: ''; }
   .enlace:focus-visible { outline: none; }
-  .servicio:has(.enlace:focus-visible) {
-    outline: 3px solid var(--familia);
-    outline-offset: 3px;
-  }
+  .servicio:has(.enlace:focus-visible) { outline: 3px solid var(--familia); outline-offset: 3px; }
   .texto {
     margin-top: var(--ds-hueco-2);
     color: var(--color-muted);
     text-wrap: pretty;
   }
-  /* Viñetas en rombo con el degradado de la familia. */
   .puntos {
     display: grid;
     gap: var(--ds-hueco-2);
@@ -324,17 +291,14 @@ const { familias, proximas } = Astro.props;
     font-size: var(--ds-texto-small);
     color: var(--color-ink);
   }
-  .puntos li {
-    position: relative;
-    padding-left: 1.25rem;
-  }
+  .puntos li { position: relative; padding-left: var(--ds-hueco-5); }
   .puntos li::before {
     position: absolute;
     top: 0.45em;
-    left: 0.15rem;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 2px;
+    left: var(--ds-hueco-1);
+    width: var(--ds-hueco-2);
+    height: var(--ds-hueco-2);
+    border-radius: var(--ds-radio-sutil);
     background: linear-gradient(135deg in oklch, var(--familia), var(--familia-2));
     transform: rotate(45deg);
     content: '';
@@ -350,7 +314,7 @@ const { familias, proximas } = Astro.props;
   }
   .precio {
     font-family: var(--font-serif);
-    font-size: 1.35rem;
+    font-size: var(--ds-texto-h3);
     font-weight: 700;
     color: var(--familia);
   }
@@ -360,31 +324,26 @@ const { familias, proximas } = Astro.props;
     font-weight: 500;
     color: var(--color-faint);
   }
-  /* El botón queda por encima de la capa clicable de la tarjeta. */
   .pie :global(.ir) { position: relative; z-index: 1; }
-  .pronto {
-    display: inline-flex;
-    gap: var(--ds-hueco-1);
-    align-items: center;
-    font-size: var(--ds-texto-small);
-    font-weight: 600;
-    color: var(--color-faint);
+
+  .vacio { padding-block: var(--ds-hueco-8); text-align: center; color: var(--color-muted); }
+  .proximas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--ds-hueco-2);
   }
-  /* Lo que aún no está: misma tarjeta, más callada (sin sombra ni elevación). */
-  .servicio:not(.listo) {
-    border-style: dashed;
-    background: color-mix(in oklab, var(--color-surface) 75%, transparent);
-    box-shadow: none;
-  }
-  /* En móvil, lo que aún no está ocupa poco: sin viñetas, para llegar antes a lo que sí. */
-  @media (max-width: 35.99rem) {
-    .servicio:not(.listo) .puntos { display: none; }
-    .servicio:not(.listo) .pie { padding-top: var(--ds-hueco-3); }
+  .proximas li[hidden] { display: none; }
+  /* Píldora con el color de su familia. */
+  .proximas :global(.pildora) {
+    border-color: color-mix(in oklab, var(--familia) 30%, transparent);
+    background: color-mix(in oklab, var(--familia) 9%, var(--color-surface));
+    color: var(--familia);
   }
 
   @media (prefers-reduced-motion: reduce) {
     .servicio { transition: none; }
-    .servicio.listo:hover,
-    .servicio.listo:focus-within { transform: none; }
+    .servicio:hover,
+    .servicio:focus-within { transform: none; }
   }
 </style>

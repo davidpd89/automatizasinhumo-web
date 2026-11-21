@@ -29,6 +29,8 @@ export interface ServicioCatalogo {
 export interface FamiliaCatalogo {
   id: IdFamilia;
   nombre: string;
+  /** Una palabra para el filtro de la página. */
+  corto: string;
   /** Una frase: qué une a los servicios de la familia. */
   texto: string;
   icono: string;
@@ -41,6 +43,7 @@ export const FAMILIAS: readonly FamiliaCatalogo[] = [
   {
     id: 'cv',
     nombre: 'Currículum y marca personal',
+    corto: 'Currículum',
     texto: 'Tu CV y lo que lo acompaña: escribes tus datos una vez y sirven para todo.',
     icono: 'id-badge-2',
     servicios: [
@@ -82,6 +85,7 @@ export const FAMILIAS: readonly FamiliaCatalogo[] = [
   {
     id: 'webs',
     nombre: 'Webs',
+    corto: 'Webs',
     texto: 'Plantillas que editas tú y se publican solas, con el mismo método que el CV.',
     icono: 'world-www',
     servicios: [
